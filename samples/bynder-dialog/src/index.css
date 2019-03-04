@@ -8,3 +8,12 @@ div {
   font: inherit;
   vertical-align: baseline;
 }
+
+.logo {
+  background-image: url('https://www.bynder.com/static/3.0/dist/img/svg/glyph-blue.svg');
+  background-repeat: no-repeat;
+  width: 40px;
+  height: 40px;
+  margin-right: 10px;
+  float: left;
+}

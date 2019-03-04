@@ -1,67 +1,103 @@
-import { init, locations } from "contentful-ui-extensions-sdk"
+import React, { useEffect, useState } from 'react';
+import ReactDOM from 'react-dom';
+import { Button } from '@contentful/forma-36-react-components';
+import { init, locations } from 'contentful-ui-extensions-sdk';
+import '@contentful/forma-36-react-components/dist/styles.css';
+import './index.css';
+import extension from '../extension.json';
 
-import "./index.css"
+class Dialog extends React.Component {
+  state = {
+    selectedIds: [],
+  };
 
-init(function(api) {
-  console.log("alex")
-
-  // console.log(
-  //   "test",
-  //   api.location(),
-  //   api.location.is(locations.LOCATION_ENTRY_FIELD)
-  // )
-
-  if (api.location.is(locations.LOCATION_ENTRY_FIELD)) {
-    console.log("field")
-  }
-  if (api.location.is(locations.LOCATION_DIALOG)) {
-    console.log("dialog")
-  }
-  if (api.location.is(locations.LOCATION_ENTRY_SIDEBAR)) {
-    console.log("sidebar")
-  }
-  if (api.location.is(locations.LOCATION_ENTRY_FIELD_SIDEBAR)) {
-    console.log("field sidebar")
+  componentDidMount() {
+    this.loadBynderScript();
+    this.props.sdk.window.updateHeight();
+    document.addEventListener('BynderAddMedia', function(e) {
+      var assetIds = e.detail.map(asset => asset.id);
+      this.setState({ selectedIds: assetIds });
+    });
   }
 
-  var assetsListsContainer = document.getElementById("selection")
-  var assetsList = document.getElementById("importedAssets")
+  loadBynderScript = () => {
+    const script = document.createElement('script');
+    script.src =
+      'https://d8ejoa1fys2rk.cloudfront.net/modules/compactview/includes/js/client-1.1.0.min.js';
+    script.async = true;
 
-  renderIds(api.field.getValue())
+    document.body.appendChild(script);
+  };
 
-  var isOpen = false
-
-  document.addEventListener("BynderAddMedia", function(e) {
-    isOpen = false
-    var assetIds = e.detail.map(function(asset) {
-      return asset.id
-    })
-    renderIds(assetIds)
-    api.field.setValue(assetIds)
-    api.window.updateHeight()
-  })
-
-  document
-    .getElementById("bynder-compactview")
-    .addEventListener("click", function() {
-      // if (!isOpen) {
-      //   isOpen = true
-      //   api.window.updateHeight(500)
-      // }
-    })
-
-  function renderIds(ids) {
-    if (!Array.isArray(ids) || ids.length < 1) {
-      assetsListsContainer.style.display = "none"
-      api.window.updateHeight()
-      return
-    }
-    assetsList.innerHTML = '<ul style="clear:both">'
-    ids.map(function(item) {
-      assetsList.innerHTML += "<li>" + item + "</li>"
-    })
-    assetsList.innerHTML += "</ul>"
-    assetsListsContainer.style.display = "block"
-    api.window.updateHeight()
+  render() {
+    return (
+      <div style={{ height: 600 }}>
+        <div
+          id="bynder-compactview"
+          data-assetTypes="image,video"
+          data-autoload="true"
+          data-button="Load media from bynder.com"
+          data-collections="true"
+          data-folder="bynder-compactview"
+          data-fullScreen="false"
+          data-header="true"
+          data-language="en_US"
+          data-mode="multi"
+          data-zindex="300"
+          data-defaultEnvironment="https://contentful.getbynder.com"
+        />
+        <Button
+          onClick={() => {
+            this.props.sdk.close(this.state.selectedIds || []);
+          }}
+        >
+          Save
+        </Button>
+      </div>
+    );
   }
-})
+}
+
+function Field({ sdk }) {
+  const [ids, setIds] = useState(sdk.field.getValue() || []);
+
+  useEffect(() => {
+    sdk.window.updateHeight();
+  });
+
+  return (
+    <div>
+      <div className="logo" />
+      <Button
+        buttonType="muted"
+        onClick={() => {
+          sdk.dialogs
+            .openExtension({
+              id: extension.id,
+              width: 1000,
+            })
+            .then(ids => {
+              console.log(ids);
+              sdk.field.setValue(ids);
+              setIds(ids);
+            });
+        }}
+      >
+        Open Bynder
+      </Button>
+      <ul>
+        {ids.map(id => (
+          <li key={id}>{id}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+init(sdk => {
+  if (sdk.location.is(locations.LOCATION_DIALOG)) {
+    ReactDOM.render(<Dialog sdk={sdk} />, document.getElementById('root'));
+  } else {
+    ReactDOM.render(<Field sdk={sdk} />, document.getElementById('root'));
+  }
+});
