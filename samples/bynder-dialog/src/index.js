@@ -7,16 +7,12 @@ import './index.css';
 import extension from '../extension.json';
 
 class Dialog extends React.Component {
-  state = {
-    selectedIds: [],
-  };
-
   componentDidMount() {
     this.loadBynderScript();
     this.props.sdk.window.updateHeight();
-    document.addEventListener('BynderAddMedia', function(e) {
+    document.addEventListener('BynderAddMedia', e => {
       var assetIds = e.detail.map(asset => asset.id);
-      this.setState({ selectedIds: assetIds });
+      this.props.sdk.close(assetIds || []);
     });
   }
 
@@ -31,7 +27,7 @@ class Dialog extends React.Component {
 
   render() {
     return (
-      <div style={{ height: 600 }}>
+      <div style={{ height: 800 }}>
         <div
           id="bynder-compactview"
           data-assetTypes="image,video"
@@ -39,20 +35,13 @@ class Dialog extends React.Component {
           data-button="Load media from bynder.com"
           data-collections="true"
           data-folder="bynder-compactview"
-          data-fullScreen="false"
+          data-fullScreen="true"
           data-header="true"
           data-language="en_US"
           data-mode="multi"
           data-zindex="300"
           data-defaultEnvironment="https://contentful.getbynder.com"
         />
-        <Button
-          onClick={() => {
-            this.props.sdk.close(this.state.selectedIds || []);
-          }}
-        >
-          Save
-        </Button>
       </div>
     );
   }
