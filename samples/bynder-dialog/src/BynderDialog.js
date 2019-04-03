@@ -10,19 +10,19 @@ export default class Dialog extends React.Component {
     this.loadBynderScript();
     this.props.sdk.window.updateHeight();
     document.addEventListener('BynderAddMedia', e => {
-      const assets = e.detail.map(asset => ({
+      const results = Array.isArray(e.detail) ? e.detail : [];
+      const assets = results.map(asset => ({
         id: asset.id,
         src: asset.thumbnails['webimage'],
       }));
-      this.props.sdk.close(assets || []);
+      this.props.sdk.close(assets);
     });
   }
 
   loadBynderScript = () => {
     const script = document.createElement('script');
-    //TODO: swap once forms are allowed in UIEs iframes 'https://d8ejoa1fys2rk.cloudfront.net/modules/compactview/includes/js/client-1.4.0.min.js';
     script.src =
-      'https://d8ejoa1fys2rk.cloudfront.net/modules/compactview/includes/js/client-1.1.0.min.js';
+      'https://d8ejoa1fys2rk.cloudfront.net/modules/compactview/includes/js/client-1.4.0.min.js';
     script.async = true;
 
     document.body.appendChild(script);

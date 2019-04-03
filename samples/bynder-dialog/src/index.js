@@ -10,11 +10,9 @@ import Thumbnail from './Thumbnail';
 
 function reducer(state, action) {
   switch (action.type) {
-    case 'add':
-      return [...state, action.payload];
-    case 'add-all':
+    case 'add-all-assets':
       return [...state, ...action.payload];
-    case 'remove':
+    case 'remove-asset':
       return state.filter(item => item.id !== action.payload);
     default:
       return state;
@@ -35,19 +33,16 @@ function Field({ sdk }) {
     sdk.field.setValue(assets);
   }, [assets]);
 
-  const onButtonClick = async () => {
-    const assets = await sdk.dialogs
-      .openExtension({
-        id: extension.id,
-        width: 900,
-        title: 'Select images from contentful.getbynder.com',
-        shouldCloseOnEscapePress: true,
-      })
-      .then(assets => {
-        if (assets) {
-          dispatch({ type: 'add-all', payload: assets });
-        }
-      });
+  const onBynderDialogOpen = async () => {
+    const assets = await sdk.dialogs.openExtension({
+      id: extension.id,
+      width: 900,
+      title: 'Select images from contentful.getbynder.com',
+      shouldCloseOnEscapePress: true,
+    });
+    if (assets) {
+      dispatch({ type: 'add-all-assets', payload: assets });
+    }
   };
 
   return (
@@ -60,7 +55,7 @@ function Field({ sdk }) {
               id={asset.id}
               src={asset.src}
               onDeleteClick={() => {
-                dispatch({ type: 'remove', payload: asset.id });
+                dispatch({ type: 'remove-asset', payload: asset.id });
               }}
             />
           ))}
@@ -72,7 +67,7 @@ function Field({ sdk }) {
           icon="Asset"
           buttonType="muted"
           size="small"
-          onClick={onButtonClick}
+          onClick={onBynderDialogOpen}
         >
           Select images in Bynder
         </Button>
@@ -92,6 +87,6 @@ init(sdk => {
   }
 });
 
-if (module.hot) {
-  module.hot.accept();
-}
+// if (module.hot) {
+//   module.hot.accept();
+// }
